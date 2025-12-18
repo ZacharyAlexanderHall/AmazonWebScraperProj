@@ -1,4 +1,4 @@
-Amazon Web Scraper 
+## Amazon Web Scraper 
 
 A python based web scraper that extracts product data from Amazon and organizes it into a Json files.
 
