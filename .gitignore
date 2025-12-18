@@ -1,0 +1,15 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# VS Code
+.vscode/
+
+# Logs
+*.log
+
+# Virtual env
+.venv/
+
+# Ignore actual Data
+data/*.json
