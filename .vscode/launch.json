@@ -1,0 +1,13 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Run WebScraper",
+            "type": "python",
+            "request": "launch",
+            "module": "WebScraper.Main",
+            "cwd": "${workspaceFolder}/src",
+            "justMyCode": true
+        }
+    ]
+}
