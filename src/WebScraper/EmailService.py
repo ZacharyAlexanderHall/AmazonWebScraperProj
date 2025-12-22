@@ -25,7 +25,6 @@ class EmailService:
     def __init__(self):
         self.service = self._gmail_authenticate()
         
-    # Marked as private 
     def _gmail_authenticate(self):
         creds = None
 
@@ -49,17 +48,33 @@ class EmailService:
             
         return build("gmail", "v1", credentials=creds)
 
-
-
-    # Decide what to include in email: add product_data.json? Alerts for price only? 
-    def send_email(self, target:str, product: Product):
+    def send_email(self, target:str, product: Product) -> None:
+        """Send an email with product information to target email address."""
         message = EmailMessage()
         message["To"] = target
         message["From"] = "me" # Stand Gmail API Practice
         message["Subject"] = f"Notification for Product: {product.asin} - {product.name[:10]}..."
-
     
-        # Build HTML body - Stolen
+        # Build HTML body
+        html_body = self._build_html_body(product)
+
+        # add HTML alternative for formatting
+        message.add_alternative(html_body, subtype="html")
+
+        # Encode for Gmail API
+        encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
+
+        # Send the email
+        try:
+            self.service.users().messages().send(
+                userId="me",
+                body={"raw": encoded_message}
+            ).execute()
+        except Exception as e:
+            raise RuntimeError(f"Failed to send email via Gmail API: {e}")
+
+    def _build_html_body(self, product: Product) -> str:
+        """Builds the HTML body of the email with product information."""
         html_body = f"""
         <html>
         <body style="font-family: Arial, sans-serif; line-height: 1.5;">
@@ -98,13 +113,4 @@ class EmailService:
         </body>
         </html>
         """
-        # add HTML alternative for formatting
-        message.add_alternative(html_body, subtype="html")
-
-        # Encode for Gmail API
-        encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
-
-        self.service.users().messages().send(
-            userId="me",
-            body={"raw": encoded_message}
-        ).execute()
+        return html_body

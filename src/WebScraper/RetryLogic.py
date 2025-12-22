@@ -35,7 +35,7 @@ class RetryLogic:
 
         for _ in range(self.retry_limit):
             try:
-                response = requests.request(method, url, headers=headers, **kwargs)
+                response = requests.request(method, url, headers=headers, **kwargs, timeout=(10, 30))
                 if response.status_code in [200, 404]:
                     if response.status_code == 200 and self.anti_bot_check:
                         if self.passed_anti_bot_check(response) == False:

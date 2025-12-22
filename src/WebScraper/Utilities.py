@@ -49,3 +49,10 @@ def extract_asin_from_url(url: str) -> str:
     else:
         logger.warning(f"ASIN not found in URL: {url}")
         return ""
+    
+def is_amazon_url(url: str) -> bool:
+    """Rejects non-Amazon URLs."""
+    if not url.startswith("https://www.amazon.com"):
+        logger.warning(f"Non-Amazon URL detected: {url}")
+        return False
+    return True

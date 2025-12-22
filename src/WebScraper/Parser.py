@@ -7,8 +7,8 @@ from WebScraper.ProductDataPipeLine import ProductDataPipeLine
 from WebScraper.RetryLogic import RetryLogic
 
 # testing
-#from WebScraper.EmailService import EmailService
-#email_serice = EmailService()
+from WebScraper.EmailService import EmailService
+email_serice = EmailService()
 
 # Do I make my instance of Data Pipeline and Retry Logic here, or in main and pass them in?
 data_pipeline = ProductDataPipeLine(
@@ -33,6 +33,9 @@ def scrape_page(url):
         data_pipeline.add_product(product)
 
         logger.info(f"Successfully Scraped Product: {product.name}")
+
+        # Send email notification
+        email_serice.send_email("Zachdacrack@gmail.com", product)
 
     else:
         logger.info(f"Error getting page... Response status code: {response.status_code} \n URL: {url}")
