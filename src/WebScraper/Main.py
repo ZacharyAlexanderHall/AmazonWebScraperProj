@@ -35,6 +35,8 @@ if __name__ == "__main__":
     data_pipeline.close_pipeline()
 """
 
+
+# attemping to use tkinter to build UI
 def scrape_clicked():
         for url in url_list:
             logger.info(f"Attempting to Scrape URL: {url}")
@@ -48,12 +50,10 @@ def add_url(url_text: Entry, url_box: Listbox):
         url_box.insert(END, url)
         url_text.delete(0, END)
 
-
-
 if __name__ == "__main__":
     root = Tk()
     root.title("Amazon Web Scraper")
-    root.geometry("800x600")
+    root.geometry("200x100")
 
     # Scrape All and Url Box
     scrape_button = ttk.Button(root, text="Scrape All", command=scrape_clicked)
@@ -69,11 +69,12 @@ if __name__ == "__main__":
     add_url_button = ttk.Button(root, text="Add Url", command=add_url(url_text, url_box))
 
     # Create Scrolled Text widget to display logs
-    log_text = scrolledtext.ScrolledText(root, state="disabled", height=100)
+    log_text = scrolledtext.ScrolledText(root, state="disabled")
     text_handler = TextHandler(log_text)
     formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
     text_handler.setFormatter(formatter)
     logger.addHandler(text_handler)
+    log_text.insert(END, logger)
 
     # row 0
     url_lbl.grid(row=0, column=0)
@@ -81,13 +82,13 @@ if __name__ == "__main__":
     add_url_button.grid(row=0, column=2)
 
     # row 1
-    scrape_button.grid(row=1, column=0)
+    scrape_button.grid(row=1, column=1)
 
     # row 2
-    url_box.grid(row=2, column= 1)
+    url_box.grid(row=2, column= 0)
 
     # row 3
-    log_text.grid(row=3, column=1)
+    log_text.grid(row=2, column=1)
 
     sv_ttk.set_theme("dark")
     root.mainloop()

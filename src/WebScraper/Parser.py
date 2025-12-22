@@ -6,12 +6,15 @@ from WebScraper.Product import Product
 from WebScraper.ProductDataPipeLine import ProductDataPipeLine
 from WebScraper.RetryLogic import RetryLogic
 
+# testing
+#from WebScraper.EmailService import EmailService
+#email_serice = EmailService()
+
 # Do I make my instance of Data Pipeline and Retry Logic here, or in main and pass them in?
 data_pipeline = ProductDataPipeLine(
         csv_filename="product_data.csv", json_filename="product_data.json"
     )
 retry_request = RetryLogic(retry_limit=5, anti_bot_check=False, use_fake_browser_headers=True)
-
 
 # Page Scraping Function
 def scrape_page(url):
@@ -33,7 +36,6 @@ def scrape_page(url):
 
     else:
         logger.info(f"Error getting page... Response status code: {response.status_code} \n URL: {url}")
-
 
 # HTML Parser Function
 def html_scraper(soup, url):

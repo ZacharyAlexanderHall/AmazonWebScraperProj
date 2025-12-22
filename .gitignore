@@ -13,3 +13,7 @@ __pycache__/
 
 # Ignore actual Data
 data/*.json
+
+# GoogleApi Credentials
+GmailCredentials.json
+token.pickle
