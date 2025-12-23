@@ -65,6 +65,7 @@ class EmailService:
         encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
 
         # Send the email
+        # pylint: disable=no-member 
         try:
             self.service.users().messages().send(
                 userId="me",

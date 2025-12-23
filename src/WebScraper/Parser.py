@@ -14,9 +14,9 @@ from WebScraper.DatabaseService import DatabaseService
 db_service = DatabaseService()
 
 # Do I make my instance of Data Pipeline and Retry Logic here, or in main and pass them in?
-data_pipeline = ProductDataPipeLine(
-        csv_filename="product_data.csv", json_filename="product_data.json"
-    )
+#data_pipeline = ProductDataPipeLine(
+#       csv_filename="product_data.csv", json_filename="product_data.json"
+#    )
 retry_request = RetryLogic(retry_limit=5, anti_bot_check=False, use_fake_browser_headers=True)
 
 # Page Scraping Function
@@ -33,7 +33,7 @@ def scrape_page(url):
         product = html_scraper(soup, url)
 
         # Add Info to scraped Data List as Dictionary.
-        data_pipeline.add_product(product)
+        #data_pipeline.add_product(product)
 
         # save to DB
         db_service.add_product(product)

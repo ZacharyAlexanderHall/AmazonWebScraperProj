@@ -1,6 +1,6 @@
 import logging
 from WebScraper.Utilities import logger, is_amazon_url
-from WebScraper.Parser import scrape_page, data_pipeline
+from WebScraper.Parser import scrape_page
 from WebScraper.Widgets import TextHandler
 
 from tkinter import *
@@ -30,10 +30,10 @@ if __name__ == "__main__":
 
     for url in url_list:
         logger.info(f"Attempting to Scrape URL: {url}")
+        if not is_amazon_url(url):
+            logger.error(f"URL is not a valid Amazon URL: {url}")
+            continue
         scrape_page(url)
-
-    data_pipeline.close_pipeline()
-
 
 """
 # attemping to use tkinter to build UI
