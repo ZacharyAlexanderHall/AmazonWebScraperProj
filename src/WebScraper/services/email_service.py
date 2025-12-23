@@ -9,14 +9,14 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 
 # Product Info
-from WebScraper.Product import Product
+from WebScraper.data.product import Product
 
 # Scope only allowing user to send emails
 SCOPES = ["https://www.googleapis.com/auth/gmail.send"]
 
 # Creates path to token.pickle and credentials
 THIS_FILE = Path(__file__).resolve()
-PROJ_ROOT = THIS_FILE.parents[2] # Reachers Project Folder level
+PROJ_ROOT = THIS_FILE.parents[3] # Reachers Project Folder level
 TOKEN_PATH = os.path.join(PROJ_ROOT, "token.pickle")
 CREDS_PATH = os.path.join(PROJ_ROOT, "GmailCredentials.json")
 

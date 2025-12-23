@@ -1,6 +1,5 @@
-import logging
-from WebScraper.Utilities import logger, is_amazon_url
-from WebScraper.Parser import scrape_page
+from WebScraper.core.utilities import logger, is_amazon_url
+from WebScraper.core.parser import scrape_page
 from WebScraper.Widgets import TextHandler
 
 from tkinter import *

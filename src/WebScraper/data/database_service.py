@@ -2,11 +2,11 @@ import sqlite3
 import json
 from pathlib import Path
 from datetime import datetime
-from WebScraper.Product import Product
+from WebScraper.data.product import Product
 
 # Create product_data filepath
 THIS_FILE = Path(__file__).resolve()
-PROJ_ROOT = THIS_FILE.parents[2] # Reachers Project Folder level
+PROJ_ROOT = THIS_FILE.parents[3] # Reachers Project Folder level
 PROJ_DATA = PROJ_ROOT / "data"
 DB_PATH = str(PROJ_DATA / "Amazon_Scraper.db")
 

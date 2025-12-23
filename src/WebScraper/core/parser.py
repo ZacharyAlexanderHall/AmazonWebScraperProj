@@ -1,16 +1,16 @@
 import requests
 from bs4 import BeautifulSoup
 
-from WebScraper.Utilities import clean_text, logger
-from WebScraper.Product import Product
-from WebScraper.ProductDataPipeLine import ProductDataPipeLine
-from WebScraper.RetryLogic import RetryLogic
+from WebScraper.core.utilities import clean_text, logger
+from WebScraper.data.product import Product
+from WebScraper.data.product_data_pipeline import ProductDataPipeLine
+from WebScraper.core.retry_logic import RetryLogic
 
 # testing
-from WebScraper.EmailService import EmailService
+from WebScraper.services.email_service import EmailService
 email_serice = EmailService()
 
-from WebScraper.DatabaseService import DatabaseService
+from WebScraper.data.database_service import DatabaseService
 db_service = DatabaseService()
 
 # Do I make my instance of Data Pipeline and Retry Logic here, or in main and pass them in?

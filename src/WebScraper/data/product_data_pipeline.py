@@ -6,8 +6,8 @@ import time
 from dataclasses import fields, asdict
 from pathlib import Path
 
-from WebScraper.Utilities import logger
-from WebScraper.Product import Product
+from WebScraper.core.utilities import logger
+from WebScraper.data.product import Product
 
 # Create product_data filepath
 THIS_FILE = Path(__file__).resolve()

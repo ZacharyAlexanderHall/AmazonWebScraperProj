@@ -1,6 +1,6 @@
 import random
 import requests
-from WebScraper.Utilities import logger
+from WebScraper.core.utilities import logger
 
 # ScrapeOps API Key specific to your account.
 SCRAPEOPS_API_KEY = "605fa0b6-98b8-4653-8e96-5571ebd30004"

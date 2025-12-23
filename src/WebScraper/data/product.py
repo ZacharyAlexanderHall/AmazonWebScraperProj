@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from WebScraper.Utilities import extract_asin_from_url
+from WebScraper.core.utilities import extract_asin_from_url
 from typing import List
 
 # Define DataClass
