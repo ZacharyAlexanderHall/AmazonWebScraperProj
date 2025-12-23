@@ -1,5 +1,5 @@
 ## Amazon Web Scraper 
-A python based web scraper that extracts product data from Amazon and organizes it into a Json files.
+A python based web scraper that extracts product data from Amazon and organizes it into a SQLite Db
 
 ## Future Features
 - Using threading to make concurrent searches

@@ -46,7 +46,7 @@ class EmailService:
             with open(TOKEN_PATH, "wb") as token:
                 pickle.dump(creds, token)
             
-        return build("gmail", "v1", credentials=creds)
+        return build("gmail", "v1", credentials=creds, cache_discovery=False)
 
     def send_email(self, target:str, product: Product) -> None:
         """Send an email with product information to target email address."""

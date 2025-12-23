@@ -11,7 +11,7 @@ class Product:
     url: str = ""                                       # Product URL
     asin: str = ""                                      # ASIN code - Amazon Standard Identification Number - Unique identifier for products on Amazon
     imageUrls: List[str] = field(default_factory=list)  # list of image URLs
-    productDetails: dict = field(default_factory=dict) # Dictonary for product details
+    productDetails: dict = field(default_factory=dict)  # Dictonary for product details
 
     def __post_init__(self):
         """Post Init Data Cleaning"""

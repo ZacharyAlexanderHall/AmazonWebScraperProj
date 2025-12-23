@@ -17,7 +17,6 @@ url_list  = [
     "https://www.google.com/search?q=if+i+build+a+iphone+app&rlz=1C1CHBF_enUS946US946&oq=if+i+build+a+iphone+app&gs_lcrp=EgZjaHJvbWUyBggAEEUYOTIICAEQABgWGB4yDQgCEAAYhgMYgAQYigUyDQgDEAAYhgMYgAQYigUyBwgEEAAY7wUyBwgFEAAY7wUyBwgGEAAY7wUyBwgHEAAY7wXSAQg5MTEwajBqN6gCALACAA&sourceid=chrome&ie=UTF-8"
 ]
 
-"""
 # Main Method
 if __name__ == "__main__":
     logger.info("Starting Scraper...")
@@ -34,9 +33,9 @@ if __name__ == "__main__":
         scrape_page(url)
 
     data_pipeline.close_pipeline()
+
+
 """
-
-
 # attemping to use tkinter to build UI
 def scrape_clicked():
         for url in url_list:
@@ -98,3 +97,4 @@ if __name__ == "__main__":
 
     sv_ttk.set_theme("dark")
     root.mainloop()
+"""

@@ -26,7 +26,7 @@ class ProductDataPipeLine:
         self.products_seen = []
 
         """
-        # upon Init attempt to load existing Product Data - May delete later
+        # upon Init attempt to load existing Product Data from JSON File.
         try:
             with open(self.json_filename, 'r', encoding="utf-8") as output_file:
                 existing_data = json.load(output_file)
@@ -103,14 +103,18 @@ class ProductDataPipeLine:
         )
 
     #NOTE: added post_init to DataPipeline to handle duplicate checking - disabled for now.
-    def is_duplicate(self, product_data):
+    def is_duplicate(self, product: Product):
         """Checks Existing Files to see if Product Information Already exists - Note: to be updated to include sql"""
-        if product_data.name in self.products_seen:
-            print(f"Duplicate Item Found: {product_data.name}. Skipping...")
+        try:
+            if product.name in self.products_seen:
+                print(f"Duplicate Item Found: {product.name}. Skipping...")
+                return True
+            else:
+                self.products_seen.append(product.name)
+                return False
+        except Exception as e:
+            logger.error("Product DataClass not properly initialized : {e}")
             return True
-        else:
-            self.products_seen.append(product_data.name)
-            return False
 
     def add_product(self, product: Product):
         """Save product Data to Json"""
