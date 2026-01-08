@@ -1,10 +1,12 @@
 from bs4 import BeautifulSoup
+from typing import Optional
 
-from WebScraper.core.utilities import clean_text, logger
+from WebScraper.core.utilities import logger
 from WebScraper.data.product import Product
 from WebScraper.core.retry_logic import RetryLogic
 from WebScraper.services.email_service import EmailService
 from WebScraper.data.database_service import DatabaseService
+from WebScraper.core.amazon_parsers import parse_product_name, parse_product_price, parse_images, parse_product_features
 
 retry_request = RetryLogic(retry_limit=5, anti_bot_check=False, use_fake_browser_headers=True)
 
@@ -24,10 +26,12 @@ def scrape_page(url:str, db_service = None, email_service = None) -> None:
         soup = BeautifulSoup(response.content, "html.parser")
 
         # Use HTML Scraper to parse product data
-        product = html_scraper(soup, url)
+        product = _html_scraper(soup, url)
 
-        # Add Info to scraped Data List as Dictionary.
-        #data_pipeline.add_product(product)
+        # Check if product parsing was successful
+        if product is None:
+            logger.info(f"Error parsing product data from page: {url}")
+            return
 
         # check if product exists in database
         existing_product = db_service.get_product_by_asin(product.asin)
@@ -37,13 +41,11 @@ def scrape_page(url:str, db_service = None, email_service = None) -> None:
         price_changed = db_service.add_product(product)
 
         # delete later...
-        email_service.send_email("Zachdacrack@gmail.com", product)        
+        #email_service.send_email("zachdacrack@gmail.com", product)        
 
         if price_changed:
             logger.info(f"Price Change Detected for {product.name}: Old Price: {old_price}, New Price: {product.price}")
             triggered_alerts = db_service.check_price_alerts(product.asin, product.price)
-
-
 
             if triggered_alerts:
                 for alert in triggered_alerts:
@@ -60,59 +62,21 @@ def scrape_page(url:str, db_service = None, email_service = None) -> None:
         logger.info(f"Error getting page... Response status code: {response.status_code} \n URL: {url}")
 
 # HTML Parser Function
-def html_scraper(soup, url):
+def _html_scraper(soup: BeautifulSoup, url:str) -> Optional[Product]:
     try:
         """takes html content and scrapes product data returning product"""
         # Get Product Name and Price
-        prodName = soup.find("span", {"id": "productTitle"}).text.strip()
-        priceWhole = soup.find("span", {"class": "a-price-whole"}).text.strip()
-        priceDecimal = soup.find("span", {"class": "a-price-fraction"}).text.strip()
-        price = float(f"{priceWhole}{priceDecimal}")
+        prodName = parse_product_name(soup)
+        price = parse_product_price(soup)
 
-        # see if this can be cleaned up. Currently loops through multiple nested spans to get all specific product images.
+        if prodName == "Unknown Product" or price is None:
+            logger.info(f"Failed to parse product name or price. Name: {prodName}, Price: {price}")
+            raise ValueError("Product name or price could not be determined.")
+
         # load product image(s)
-        images_to_save = []
-        spans = soup.find_all('span')
-        for span in spans:
-            image_array = span.find_all('span')
-            for item in image_array:
-                image_span = item.find('span')
-                if image_span is not None:
-                    images = image_span.find_all('img')
-                    for img in images:
-                        img_url = img.get('src')
-                        if "https://m.media-amazon.com/images/" in img_url and img_url not in images_to_save:
-                            images_to_save.append(img_url)
-
-        #Get Product Features
-        prod_features = {}
-
-        features_bullets = soup.find("div", id="detailBullets_feature_div")
-        if features_bullets:
-            for li in features_bullets.select("ul li"):
-                text_span = li.find("span", class_="a-list-item")
-                if text_span:
-
-                    # Extract text and clean it
-                    raw_text = text_span.get_text(strip=True)
-
-                    # Remove Unicode BiDi control characters
-                    cleaned_text = clean_text(raw_text)
-
-                    # Must contain a key:value pattern - helps to avoid links and other non relevant data.
-                    if ":" not in cleaned_text:
-                        continue
-
-                    key, value = [part.strip() for part in cleaned_text.split(":", 1)]
-
-                    prod_features[key] = value
-        else:
-            details = soup.find("div", id="prodDetails")
-            if details:
-                for row in details.select("tr"): #select tablerows
-                    key = clean_text(row.find("th").text)
-                    value = clean_text(row.find("td").text)
-                    prod_features[key] = value
+        images_to_save = parse_images(soup)
+        # Get Product Features
+        prod_features = parse_product_features(soup)
         
         return Product(
             name = prodName,

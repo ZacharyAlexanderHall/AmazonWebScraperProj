@@ -20,7 +20,6 @@ class DatabaseService:
         # if table does not exist, create it
         self._ensure_tables_exist()
 
-
     def _ensure_tables_exist(self):
         """Create Products, PriceHistory, and PriceAlerts Table if it does not exist."""
         with sqlite3.connect(self.db_path) as conn:
