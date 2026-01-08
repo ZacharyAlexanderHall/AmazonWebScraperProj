@@ -1,6 +1,6 @@
 import requests
 
-from WebScraper.core.client_metadata import BrowserHeadersMiddleware, UserAgentMiddleware
+from WebScraper.services.client_metadata import BrowserHeadersMiddleware, UserAgentMiddleware
 
 browser_headers_middleware = BrowserHeadersMiddleware(num_headers=20)
 
