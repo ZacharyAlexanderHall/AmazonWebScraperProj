@@ -11,7 +11,7 @@ from WebScraper.core.amazon_parsers import parse_product_name, parse_product_pri
 retry_request = RetryLogic(retry_limit=5, anti_bot_check=False, use_fake_browser_headers=True)
 
 # Page Scraping Function
-def scrape_page(url:str, db_service = None, email_service = None) -> None:
+def scrape_page(url:str, db_service = None, email_service = None) -> bool:
     """Main Page Scraping Function"""
     if db_service is None:
         db_service = DatabaseService()
@@ -31,7 +31,7 @@ def scrape_page(url:str, db_service = None, email_service = None) -> None:
         # Check if product parsing was successful
         if product is None:
             logger.info(f"Error parsing product data from page: {url}")
-            return
+            return False
 
         # check if product exists in database
         existing_product = db_service.get_product_by_asin(product.asin)
@@ -41,7 +41,7 @@ def scrape_page(url:str, db_service = None, email_service = None) -> None:
         price_changed = db_service.add_product(product)
 
         # delete later...
-        #email_service.send_email("zachdacrack@gmail.com", product)        
+        email_service.send_email("madison.carly.hall@gmail.com", product)        
 
         if price_changed:
             logger.info(f"Price Change Detected for {product.name}: Old Price: {old_price}, New Price: {product.price}")
@@ -54,12 +54,10 @@ def scrape_page(url:str, db_service = None, email_service = None) -> None:
                     logger.info(f"Price Alert Triggered for {product.name} at price {product.price} for {alert.user_email}")
 
         logger.info(f"Successfully Scraped Product: {product.name}")
-
-        # Send email notification
-        #email_serice.send_email("Zachdacrack@gmail.com", product)
-
+        return True
     else:
         logger.info(f"Error getting page... Response status code: {response.status_code} \n URL: {url}")
+        return False
 
 # HTML Parser Function
 def _html_scraper(soup: BeautifulSoup, url:str) -> Optional[Product]:

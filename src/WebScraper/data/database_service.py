@@ -63,6 +63,17 @@ class DatabaseService:
             );
             """)
 
+            # Create URL Tracking Table
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS TrackedURLs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                url TEXT UNIQUE NOT NULL,
+                asin TEXT UNIQUE NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                is_active BOOLEAN DEFAULT 1
+            );
+            """)
+
             # Commit changes
             conn.commit()
 
@@ -295,3 +306,91 @@ class DatabaseService:
         except sqlite3.Error as e:
             logger.error(f"Database error: {e}")
             return []
+    
+    def add_url(url:str, asin:str) -> bool:
+        """Add a new URL to be tracked in the database."""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                INSERT INTO TrackedURLs (url, asin)
+                VALUES (?, ?)
+                """, (url, asin))
+                
+                conn.commit()
+                logger.info(f"Added new URL to track: {url}")
+                return True
+        except sqlite3.Error as e:
+            logger.error(f"Database error: {e}")
+            return False
+        
+    def get_all_active_urls(self) -> list[Dict]:
+        """Retrieve all tracked URLs from the database."""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                SELECT id, url, asin FROM TrackedURLs
+                WHERE is_active = 1
+                ORDER BY created_at DESC
+                """)
+                
+                tracked_urls = [
+                    {"id": row[0], "url": row[1], "asin": row[2]} 
+                    for row in cursor.fetchall()
+                ]
+                return tracked_urls
+        except sqlite3.Error as e:
+            logger.error(f"Database error: {e}")
+            return []
+
+    def get_all_tracked_urls(self) -> list[Dict]:
+        """Retrieve all tracked URLs from the database."""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                SELECT id, url, asin FROM TrackedURLs
+                ORDER BY created_at DESC
+                """)
+                
+                tracked_urls = [
+                    {"id": row[0], "url": row[1], "asin": row[2]} 
+                    for row in cursor.fetchall()
+                ]
+                return tracked_urls
+        except sqlite3.Error as e:
+            logger.error(f"Database error: {e}")
+            return []
+
+    def removed_tracked_url(self, asin: str) -> bool:
+        """Remove a tracked URL from the database by its ID."""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                UPDATE TrackedURLs 
+                SET is_active = 0 
+                WHERE asin = ?
+                """, (asin,))
+                
+                conn.commit()
+                logger.info(f"Removed URL from Tracking: {url_id}")
+                return True
+        except sqlite3.Error as e:
+            logger.error(f"Database error: {e}")
+            return False
+        
+    def delete_price_alert(self, asin: str) -> bool:
+        """Delete a price alert by its ID."""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute("DELETE FROM PriceAlerts WHERE asin = ?", (asin,))
+                
+                conn.commit()
+                logger.info(f"Deleted price alert with ASIN: {asin}")
+                return True
+        except sqlite3.Error as e:
+            logger.error(f"Database error: {e}")
+            return False
