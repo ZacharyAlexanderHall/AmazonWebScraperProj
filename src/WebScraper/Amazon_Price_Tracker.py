@@ -97,7 +97,7 @@ def run_scrape():
             if scrape_page(url, db_service=db_service, email_service=email_service):
                 print(f"   ✅ Scrape successful!\n")
                 success_count += 1
-            else
+            else:
                 print(f"Scrape unsccessful for Url: {url}")
                 fail_count += 1
         except Exception as e:

@@ -1,7 +1,6 @@
 import sqlite3
 import json
 from pathlib import Path
-from datetime import datetime
 from typing import List, Optional, Dict
 from WebScraper.data.product import Product
 from WebScraper.core.utilities import logger
