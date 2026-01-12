@@ -40,9 +40,7 @@ def scrape_page(url:str, db_service = None, email_service = None) -> bool:
         # add or update product in database, returns True if price changed
         price_changed = db_service.add_product(product)
 
-        # delete later...
-        email_service.send_email("madison.carly.hall@gmail.com", product)        
-
+        # Check if price has changed since last scrape, if so check against price alerts
         if price_changed:
             logger.info(f"Price Change Detected for {product.name}: Old Price: {old_price}, New Price: {product.price}")
             triggered_alerts = db_service.check_price_alerts(product.asin, product.price)

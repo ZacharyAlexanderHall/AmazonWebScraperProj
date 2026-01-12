@@ -56,3 +56,10 @@ def is_amazon_url(url: str) -> bool:
         logger.warning(f"Non-Amazon URL detected: {url}")
         return False
     return True
+
+def is_email_address(email: str) -> bool:
+    if not email or not isinstance(email, str):
+        return False
+
+    pattern = r"^[\w\.-]+@[\w\.-]+\.\w+$"
+    return bool(re.match(pattern, email))

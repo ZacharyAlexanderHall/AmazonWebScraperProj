@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from WebScraper.data.database_service import DatabaseService
 from WebScraper.services.email_service import EmailService
 from WebScraper.core.amazon_product_scraper import scrape_page
-from WebScraper.core.utilities import logger, is_amazon_url, extract_asin_from_url
+from WebScraper.core.utilities import logger, is_amazon_url, extract_asin_from_url, is_email_address
 
 db_service = DatabaseService()
 
@@ -36,7 +36,7 @@ def add_url(url:str):
             return
 
     # Add URL to Database
-    db_service.add_tracked_url(url, asin)
+    db_service.add_url(url, asin)
     print(f"✅ URL added to tracking list!")
     print(f"   ASIN: {asin}")
     print(f"   URL: {url}")
@@ -148,7 +148,11 @@ def add_alert(asin: str, target_price: float, target_email: str):
     
     if not product:
         print(f"❌ Product with ASIN {asin} not found in database.")
-        print("   Tip: Scrape the product first with: python manage_alerts.py run-scrape")
+        print("   Tip: Scrape the product first with: python Amazon_Web_Scraper.py run-scrape")
+        return
+    
+    if not is_email_address(target_email):
+        print(f"Email: '{target_email}' is not a valid email address, please enter Valid Email")
         return
     
     # Create alert
@@ -163,7 +167,7 @@ def add_alert(asin: str, target_price: float, target_email: str):
     if product.price <= target_price:
         print(f"   ⚠️  Current price already meets alert threshold!")
 
-def list_alerts():
+def show_alerts():
     """List all active price alerts."""
     alerts = db_service.get_active_alerts()
     
@@ -182,7 +186,7 @@ def list_alerts():
         print(f"   Product: {alert['product_name'][:60]}")
         print(f"   ASIN: {alert['asin']}")
         print(f"   Target: ${alert['target_price']:.2f} | Current: ${alert['current_price']:.2f}")
-        print(f"   Email: {alert['email']}")
+        print(f"   Email: {alert['target_email']}")
         print()
 
 def delete_alert(asin:str):
@@ -190,9 +194,9 @@ def delete_alert(asin:str):
     success = db_service.delete_price_alert(asin)
 
     if success:
-        print(f"✅ Alert deleted (ID: {alert_id})")
+        print(f"✅ Alert deleted for Product: '{asin}'")
     else:
-        print(f"❌ Alert {alert_id} not found")
+        print(f"❌ Alert for Product '{asin}' not found")
 
 # ============================================================================
 # VIEWING DATA
@@ -210,13 +214,13 @@ def show_products():
     print("-" * 100)
     
     for product in products:
-        print(f"• {product['name'][:70]}")
-        print(f"  ASIN: {product['asin']}")
-        print(f"  Price: ${product['price']:.2f}")
-        print(f"  Last updated: {product['updated_at']}")
+        print(f"• {product.name[:70]}")
+        print(f"  ASIN: {product.asin}")
+        print(f"  Price: ${product.price:.2f}")
+        print(f"  Last updated: {product.updated_at or 'N/A'}")
         
         # Show price history count
-        history = db_service.get_price_history(product['asin'])
+        history = db_service.get_price_history(product.asin)
         if len(history) > 1:
             print(f"  Price changes: {len(history)}")
         print()
@@ -330,16 +334,16 @@ def main():
             email = sys.argv[4]
             add_alert(asin, price, email)
         
-        elif command == "list-alerts":
-            list_alerts()
+        elif command == "show-alerts":
+            show_alerts()
         
         elif command == "delete-alert":
             if len(sys.argv) != 3:
-                print("❌ Usage: python manage_alerts.py delete-alert <id>")
+                print("❌ Usage: python manage_alerts.py delete-alert <asin>")
                 return
             try:
-                alert_id = int(sys.argv[2])
-                delete_alert(alert_id)
+                asin = sys.argv[2]
+                delete_alert(asin)
             except ValueError:
                 print("❌ ID must be a number")
         

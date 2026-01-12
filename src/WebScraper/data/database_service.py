@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 from typing import List, Optional, Dict
 from WebScraper.data.product import Product
-from WebScraper.core.utilities import logger
+from WebScraper.core.utilities import logger, extract_asin_from_url
 
 # Create product_data filepath
 THIS_FILE = Path(__file__).resolve()
@@ -56,6 +56,7 @@ class DatabaseService:
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 asin TEXT NOT NULL,
                 target_price REAL NOT NULL,
+                target_email TEXT NOT NULL,
                 is_active BOOLEAN DEFAULT 1,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (asin) REFERENCES Products(asin)
@@ -228,7 +229,7 @@ class DatabaseService:
                 
                 # Insert price alert
                 cursor.execute("""
-                INSERT INTO PriceAlerts (asin, target_price, email)
+                INSERT INTO PriceAlerts (asin, target_price, target_email)
                 VALUES (?, ?, ?)
                 """, (asin, target_price, email))
                 
@@ -247,7 +248,7 @@ class DatabaseService:
                 
                 # Get active price alerts for the product
                 cursor.execute("""
-                SELECT id, target_price, email FROM PriceAlerts 
+                SELECT id, target_price, target_email FROM PriceAlerts 
                 WHERE asin = ? AND is_active = 1 AND target_price >= ?
                 """, (asin, current_price))
                 
@@ -256,7 +257,7 @@ class DatabaseService:
                     {
                         "id": row[0],
                         "target_price": row[1],
-                        "email": row[2]
+                        "target_email": row[2]
                     } 
                     for row in rows
                 ]
@@ -283,7 +284,7 @@ class DatabaseService:
                 cursor = conn.cursor()
                 
                 cursor.execute("""
-                SELECT pa.id, pa.asin, pa.target_price, pa.email, p.product_name, p.current_price
+                SELECT pa.id, pa.asin, pa.target_price, pa.target_email, p.product_name, p.current_price
                 FROM PriceAlerts pa
                 JOIN Products p ON pa.asin = p.asin
                 WHERE pa.is_active = 1
@@ -295,7 +296,7 @@ class DatabaseService:
                     "id": row[0],
                     "asin": row[1],
                     "target_price": row[2],
-                    "email": row[3],
+                    "target_email": row[3],
                     "product_name": row[4],
                     "current_price": row[5]
                     } 
@@ -306,7 +307,7 @@ class DatabaseService:
             logger.error(f"Database error: {e}")
             return []
     
-    def add_url(url:str, asin:str) -> bool:
+    def add_url(self, url:str, asin:str) -> bool:
         """Add a new URL to be tracked in the database."""
         try:
             with sqlite3.connect(self.db_path) as conn:
@@ -329,13 +330,13 @@ class DatabaseService:
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()
                 cursor.execute("""
-                SELECT id, url, asin FROM TrackedURLs
+                SELECT id, url, asin, created_at FROM TrackedURLs
                 WHERE is_active = 1
                 ORDER BY created_at DESC
                 """)
                 
                 tracked_urls = [
-                    {"id": row[0], "url": row[1], "asin": row[2]} 
+                    {"id": row[0], "url": row[1], "asin": row[2], "created_at": row[3]} 
                     for row in cursor.fetchall()
                 ]
                 return tracked_urls
