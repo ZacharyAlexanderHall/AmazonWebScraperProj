@@ -100,7 +100,7 @@ def run_scrape():
     for url_data in url_data_list:
         try:
             url = url_data['url']
-            print(f"🔍 Scraping URL: {url}")
+            print(f"   🔍 Scraping URL: {url}")
 
             if scrape_page(url, db_service=db_service, email_service=email_service):
                 print(f"   ✅ Scrape successful!\n")
