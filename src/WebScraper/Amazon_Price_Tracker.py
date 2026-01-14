@@ -1,4 +1,6 @@
 import sys
+import time
+import random
 from datetime import datetime, timedelta
 
 from WebScraper.data.database_service import DatabaseService
@@ -33,6 +35,12 @@ def add_url(url:str):
             print(f"⚠️ Product already being tracked!")
             print(f"ASIN: {asin}")
             print(f"Existing Url:{url}")
+            
+            print("Setting Existing URL to active...")
+            db_service.set_url_to_active(asin)
+            print(f"✅ URL for Product: '{asin}' set to actively track!")
+            print(f"   ASIN: {asin}")
+            print(f"   URL: {url}")
             return
 
     # Add URL to Database
@@ -40,8 +48,8 @@ def add_url(url:str):
     print(f"✅ URL added to tracking list!")
     print(f"   ASIN: {asin}")
     print(f"   URL: {url}")
-    print(f"\n   Run 'python manage_alerts.py run-scrape' to scrape it now")
-
+    print(f"\n   Run 'run-scrape' to scrape it now")
+ 
 def show_urls():
     """Display all currently tracked URLs."""
     tracked_urls = db_service.get_all_active_urls()
@@ -104,6 +112,8 @@ def run_scrape():
             print(f"   ❌ Scrape failed: {e}\n")
             logger.error(f"Error scraping URL {url}: {e}")
             fail_count += 1
+        finally:
+            time.sleep(random.uniform(3,10))
     
     print("-" * 60)
     print(f"Scraping complete!")
@@ -127,13 +137,16 @@ def run_scheduler(interval_hours: int = 48):
             print(f"{'='*60}\n")
 
             # Run Scrape
-            success, failure = run_scrape()
+            run_scrape()
 
             # Next run info
             next_run = now + timedelta(hours=interval_hours)
+            print(f"{run_number} consecutive sucessful runs")
             print(f"\nNext scrape: {next_run.strftime('%Y-%m-%d %H:%M:%S')}")
             print(f"Sleeping for {interval_hours} hours...\n")
-
+            print("Press Ctrl+C to stop\n")
+            
+            # Sleep until next Scheduled Scrape 
             time.sleep(interval_hours * 3600)
             run_number += 1
     except KeyboardInterrupt:
@@ -287,7 +300,7 @@ def main():
     try:
         if command == "add-url":
             if len(sys.argv) != 3:
-                print("❌ Usage: python manage_alerts.py add-url <amazon_url>")
+                print("❌ Usage: add-url <amazon_url>")
                 return
             add_url(sys.argv[2])
         
@@ -296,11 +309,13 @@ def main():
         
         elif command == "remove-url":
             if len(sys.argv) != 3:
-                print("❌ Usage: python manage_alerts.py remove-url <id>")
+                print("❌ Usage: remove-url <asin>")
+                print("Please enter Product ASIN (Use command 'show-products' to view all saved products)")
+                print("the URL associated with the provided ASIN will be deleted")
                 return
             try:
-                url_id = int(sys.argv[2])
-                remove_url(url_id)
+                asin = sys.argv[2]
+                remove_url(asin)
             except ValueError:
                 print("❌ ID must be a number")
         
@@ -309,8 +324,8 @@ def main():
 
         elif command == "run-schedule":
             if len(sys.argv) != 3:
-                print("❌ Usage: python manage_alerts.py schedule <hours>")
-                print("   Example: python manage_alerts.py schedule 48")
+                print("❌ Usage: schedule <hours>")
+                print("   Example: schedule 48")
                 return
             try:
                 hours = int(sys.argv[2])
@@ -323,7 +338,7 @@ def main():
         
         elif command == "add-alert":
             if len(sys.argv) != 5:
-                print("❌ Usage: python manage_alerts.py add-alert <asin> <price> <email>")
+                print("❌ Usage: add-alert <asin> <price> <email>")
                 return
             asin = sys.argv[2]
             try:
@@ -339,13 +354,13 @@ def main():
         
         elif command == "delete-alert":
             if len(sys.argv) != 3:
-                print("❌ Usage: python manage_alerts.py delete-alert <asin>")
+                print("❌ Usage: delete-alert <asin>")
                 return
             try:
                 asin = sys.argv[2]
                 delete_alert(asin)
             except ValueError:
-                print("❌ ID must be a number")
+                print(f"❌ Unable to delete Alert for Product: {asin}")
         
         elif command == "show-products":
             show_products()

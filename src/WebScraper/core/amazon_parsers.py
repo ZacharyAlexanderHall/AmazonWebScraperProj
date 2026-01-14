@@ -81,26 +81,8 @@ def parse_product_name(soup: BeautifulSoup) -> str:
     return "Unknown Product"
 
 def parse_product_price(soup: BeautifulSoup) -> Optional[float]:
-    """Attempts to parse price via the a-offscreen class first, then falls back to whole and fraction selectors."""
-    # First try to find price using a-offscreen selectors
-    for container_id in AMAZON_BUYBOX_IDS:
-        container = soup.find("div", {"id": container_id})
-        if not container:
-            continue
-
-        for selector in AMAZON_PRICE_OFFSCREEN_SELECTORS:
-            offscreen_tag = container.find(selector["tag"], selector["attrs"])
-            if offscreen_tag:
-                price = re.sub(r'[^\d\.]', '', offscreen_tag.text.strip())
-                if price:
-                    try:
-                        return float(price)
-                    except ValueError:
-                        logger.error(f"Error converting price to float: {price}")
-
-    logger.info("a-offscreen price not found, falling back to whole and fraction selectors...")
-
-    # if above does not work try to find the whole part of the price
+    """Attempts tp parse price via Whole & Fraction selectors, and then falls back to a-offscreen price as last resort."""
+    # First try to find price by using seperate selectors for the "Whole" and "Fraction" of price.
     price_whole = None
     price_fraction = "00"  # Default to 00 if no fraction found
 
@@ -124,6 +106,24 @@ def parse_product_price(soup: BeautifulSoup) -> Optional[float]:
             return float(f"{price_whole}.{price_fraction}")
         except ValueError:
             logger.error(f"Error converting price to float: {price_whole}.{price_fraction}")
+
+    # Try to find price using a-offscreen selectors as last resort.
+    for container_id in AMAZON_BUYBOX_IDS:
+        container = soup.find("div", {"id": container_id})
+        if not container:
+            continue
+
+        for selector in AMAZON_PRICE_OFFSCREEN_SELECTORS:
+            offscreen_tag = container.find(selector["tag"], selector["attrs"])
+            if offscreen_tag:
+                price = re.sub(r'[^\d\.]', '', offscreen_tag.text.strip())
+                if price:
+                    try:
+                        return float(price)
+                    except ValueError:
+                        logger.error(f"Error converting price to float: {price}")
+
+    logger.info("a-offscreen price not found...")
 
     return None # return None if price could not be determined
 

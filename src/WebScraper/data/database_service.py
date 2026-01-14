@@ -375,7 +375,7 @@ class DatabaseService:
                 """, (asin,))
                 
                 conn.commit()
-                logger.info(f"Removed URL from Tracking: {url_id}")
+                logger.info(f"Removed URL associated with Product: {asin} from tracking...")
                 return True
         except sqlite3.Error as e:
             logger.error(f"Database error: {e}")
@@ -390,6 +390,20 @@ class DatabaseService:
                 
                 conn.commit()
                 logger.info(f"Deleted price alert with ASIN: {asin}")
+                return True
+        except sqlite3.Error as e:
+            logger.error(f"Database error: {e}")
+            return False
+        
+    def set_url_to_active(self, asin:str) -> bool:
+        """Updates a saved URL to the active state"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute("UPDATE TrackedURLS SET [is_active] = 1 WHERE [asin] = ?", (asin,))
+
+                conn.commit()
+                logger.info(f"Updated URL for Product: {asin}")
                 return True
         except sqlite3.Error as e:
             logger.error(f"Database error: {e}")
