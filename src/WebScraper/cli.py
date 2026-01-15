@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from WebScraper.data.database_service import DatabaseService
 from WebScraper.services.email_service import EmailService
 from WebScraper.core.amazon_product_scraper import scrape_page
-from WebScraper.core.utilities import logger, is_amazon_url, extract_asin_from_url, is_email_address
+from WebScraper.core.utilities import logger, is_amazon_url, extract_asin_from_url, is_email_address, standardize_product_url
 
 db_service = DatabaseService()
 
@@ -44,7 +44,8 @@ def add_url(url:str):
             return
 
     # Add URL to Database
-    db_service.add_url(url, asin)
+    standardized_url = standardize_product_url(asin) # takes asin to create standardized url for DB consistency
+    db_service.add_url(standardized_url, asin)
     print(f"✅ URL added to tracking list!")
     print(f"   ASIN: {asin}")
     print(f"   URL: {url}")

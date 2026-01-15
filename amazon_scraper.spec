@@ -49,7 +49,7 @@ exe = EXE(
     a.zipfiles,
     a.datas,
     [],
-    name='AmazonPriceTracker',  # ← This determines the .exe name
+    name='AmazonPriceTracker_v1.0',  # This determines the .exe name
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

@@ -2,6 +2,8 @@ import re
 import unicodedata
 import logging
 
+from urllib.parse import urlparse, parse_qs
+
 # Create logger
 logging.basicConfig(
     level=logging.INFO,
@@ -25,6 +27,20 @@ _BIDI_CONTROLS = {
     "\u2069",  # POP DIRECTIONAL ISOLATE
 }
 
+ASIN_REGEX = re.compile(r'[A-Z0-9]{10}')
+
+PATH_PATTERNS = [
+    re.compile(r'/dp/([A-Z0-9]{10})', re.IGNORECASE),
+    re.compile(r'/gp/product/([A-Z0-9]{10})', re.IGNORECASE),
+    re.compile(r'/gp/aw/d/([A-Z0-9]{10})', re.IGNORECASE),
+    re.compile(r'/product/([A-Z0-9]{10})', re.IGNORECASE),
+]
+
+AMAZON_DOMAINS = {
+    "amazon.com",
+    "www.amazon.com",
+}
+
 def clean_text(s: str) -> str:
     """Cleans text by removing BiDi control characters and normalizing whitespace."""
     if not s:
@@ -43,18 +59,45 @@ def clean_text(s: str) -> str:
 
 def extract_asin_from_url(url: str) -> str:
     """Extracts the ASIN from an Amazon product URL via Regex."""
-    match = re.search(r"/dp/([A-Z0-9]{10})", url)
-    if match:
-        return match.group(1)
-    else:
-        logger.warning(f"ASIN not found in URL: {url}")
-        return ""
+    if not url:
+        return None
+    
+    parsed = urlparse(url)
+    path = parsed.path 
+    
+    # asin via url path
+    for pattern in PATH_PATTERNS:
+        match = pattern.search(path)
+        if match:
+                return match.group(1).upper() # for ASIN consistency
+        
+    # asin via query string, fallback
+    query_params = parse_qs(parsed.query)
+    for key in ("asin", "ASIN"):
+        if key in query_params:
+            value = query_params[key][0].upper()
+            if ASIN_REGEX.fullmatch(value):
+                return value
+    
+def standardize_product_url(asin: str) -> str:
+    if not asin:
+        return None
+    return f"https://www.amazon.com/dp/{asin}"
     
 def is_amazon_url(url: str) -> bool:
     """Rejects non-Amazon URLs."""
-    if not url.startswith("https://www.amazon.com"):
-        logger.warning(f"Non-Amazon URL detected: {url}")
+    if not url:
         return False
+
+    url = url.strip('"').strip() # remove optional quotes from arguement string
+    parsed = urlparse(url)
+
+    if parsed.scheme not in {"http", "https"}:
+        return False
+
+    if parsed.netloc.lower() not in AMAZON_DOMAINS:
+        return False
+
     return True
 
 def is_email_address(email: str) -> bool:

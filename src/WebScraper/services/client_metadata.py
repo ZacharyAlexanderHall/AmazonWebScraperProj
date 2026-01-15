@@ -20,6 +20,7 @@ def load_env_file():
             return
 
 # ScrapeOps API Key specific to your account.
+load_env_file() # <- Explicitly Call load_env_file
 SCRAPEOPS_API_KEY = os.getenv("SCRAPEOPS_API_KEY")
 if not SCRAPEOPS_API_KEY:
     logger.warning(
