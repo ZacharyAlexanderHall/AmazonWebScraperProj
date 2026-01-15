@@ -1,11 +1,20 @@
 import random
 import requests
 import os
+from dotenv import load_dotenv
 from WebScraper.core.utilities import logger
+
+# Load environment variables from .env
+load_dotenv()
 
 # ScrapeOps API Key specific to your account.
 SCRAPEOPS_API_KEY = os.getenv("SCRAPEOPS_API_KEY")
-
+if not SCRAPEOPS_API_KEY:
+    logger.warning(
+        "SCRAPEOPS_API_KEY not set. Using fallback headers only."
+        "Set the Key in your .env file for better results"
+        )
+    
 # Uses ScrapeOps Api to get randomly generated list of Browser Headers
 class BrowserHeadersMiddleware:
     """Uses Scrape Ops Api to generate Browser Headers, or uses default list taken from ScrapeOps"""

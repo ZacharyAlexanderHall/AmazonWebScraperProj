@@ -1,14 +1,27 @@
 import sqlite3
 import json
+import os
 from pathlib import Path
 from typing import List, Optional, Dict
 from WebScraper.data.product import Product
 from WebScraper.core.utilities import logger, extract_asin_from_url
 
 # Create product_data filepath
-THIS_FILE = Path(__file__).resolve()
-PROJ_ROOT = THIS_FILE.parents[3] # Reachers Project Folder level
-PROJ_DATA = PROJ_ROOT / "data"
+def get_data_directory():
+    """Get / Create the application data directiory"""
+    # Check if we're in development (has src/ folder structure)
+    if os.path.exists(Path(__file__).resolve().parents[3] / "data"):
+        # Development mode - use project data folder
+        data_dir = Path(__file__).resolve().parents[3] / "data"
+    else:
+        # Production mode - use user's home directory
+        data_dir = Path.home() / ".amazon_price_tracker" / "data"
+        
+    # create Directory if it doesn't exist
+    data_dir.mkdir(parents=True, exist_ok=True)
+    return data_dir
+
+PROJ_DATA = get_data_directory()
 DB_PATH = str(PROJ_DATA / "Amazon_Scraper.db")
 
 class DatabaseService:
@@ -143,9 +156,11 @@ class DatabaseService:
                 conn.commit()
                 return price_changed
         except sqlite3.IntegrityError:
-            print(f"Product with ASIN {product.asin} already exists in the database.")
+            logger.warning(f"Product with ASIN {product.asin} already exists in the database.")
+            return False
         except Exception as e:
-            print(f"An error occurred while adding the product: {e}")
+            logger.warning(f"An error occurred while adding the product {product.asin}: {e}")
+            raise
 
     def get_product_by_asin(self, asin: str) -> Optional[Product]:
         try:
@@ -172,7 +187,10 @@ class DatabaseService:
                     logger.info(f"No product found with ASIN: {asin}")
                     return None
         except sqlite3.Error as e:
-            logger.error(f"Database error: {e}")
+            logger.error(f"Database error wile fetching product {asin}: {e}")
+            return None
+        except Exception as e:
+            logger.error(f"Unexpected Error while fetching product {asin}: {e}")
             return None
     
     def get_price_history(self, asin: str) -> List[Dict]:
@@ -191,7 +209,10 @@ class DatabaseService:
 
                 return history
         except sqlite3.Error as e:
-            logger.error(f"Database error: {e}")
+            logger.error(f"Database error while fetching price history for product {asin}: {e}")
+            return []
+        except Exception as e:
+            logger.error(f"error while fetching price history for product {asin}: {e}")
             return []
         
     def get_all_products(self) -> List[Product]:
@@ -218,7 +239,10 @@ class DatabaseService:
                 
                 return products
         except sqlite3.Error as e:
-            logger.error(f"Database error: {e}")
+            logger.error(f"Database error while fetching all products: {e}")
+            return []
+        except Exception as e:
+            logger.error(f"Unexpected error while fetching all products: {e}")
             return []
 
     def set_price_alert(self, asin: str, target_price: float, email: str) -> bool:
@@ -237,7 +261,10 @@ class DatabaseService:
                 logger.info(f"Set price alert for ASIN {asin} at ${target_price:.2f} to {email}")
                 return True
         except sqlite3.Error as e:
-            logger.error(f"Database error: {e}")
+            logger.error(f"Database error setting alert for {asin}: {e}")
+            return False
+        except Exception as e:
+            logger.error(f"Unexpected error setting alert for {asin}: {e}")
             return False
     
     def check_price_alerts(self, asin: str, current_price: float) -> List[Dict]:
@@ -274,7 +301,10 @@ class DatabaseService:
                 
                 return alerts_triggered
         except sqlite3.Error as e:
-            logger.error(f"Database error: {e}")
+            logger.error(f"Database error while fetching price alerts for product {asin}: {e}")
+            return []
+        except Exception as e:
+            logger.error(f"Unexpected error while fetching price alerts for product {asin}: {e}")
             return []
         
     def get_active_alerts(self) -> List[Dict]:
@@ -304,7 +334,10 @@ class DatabaseService:
                 ]
                 return active_alerts
         except sqlite3.Error as e:
-            logger.error(f"Database error: {e}")
+            logger.error(f"Database error while fetching active alerts: {e}")
+            return []
+        except Exception as e:
+            logger.error(f"Unexpected error while fetching active alerts: {e}")
             return []
     
     def add_url(self, url:str, asin:str) -> bool:
@@ -321,7 +354,10 @@ class DatabaseService:
                 logger.info(f"Added new URL to track: {url}")
                 return True
         except sqlite3.Error as e:
-            logger.error(f"Database error: {e}")
+            logger.error(f"Database error while adding url: {url}: {e}")
+            return False
+        except Exception as e:
+            logger.error(f"Unexpected error while adding url: {url}: {e}")
             return False
         
     def get_all_active_urls(self) -> list[Dict]:
@@ -341,10 +377,13 @@ class DatabaseService:
                 ]
                 return tracked_urls
         except sqlite3.Error as e:
-            logger.error(f"Database error: {e}")
+            logger.error(f"Database error while fetching all tracked Urls: {e}")
+            return []
+        except Exception as e:
+            logger.error(f"unexpected error while fetching all tracked Urls: {e}")
             return []
 
-    def get_all_tracked_urls(self) -> list[Dict]:
+    def get_all_saved_urls(self) -> list[Dict]:
         """Retrieve all tracked URLs from the database."""
         try:
             with sqlite3.connect(self.db_path) as conn:
@@ -360,7 +399,10 @@ class DatabaseService:
                 ]
                 return tracked_urls
         except sqlite3.Error as e:
-            logger.error(f"Database error: {e}")
+            logger.error(f"Database error while fetching all urls: {e}")
+            return []
+        except Exception as e:
+            logger.error(f"Unexpected error while fetching all urls: {e}")
             return []
 
     def removed_tracked_url(self, asin: str) -> bool:
@@ -378,9 +420,12 @@ class DatabaseService:
                 logger.info(f"Removed URL associated with Product: {asin} from tracking...")
                 return True
         except sqlite3.Error as e:
-            logger.error(f"Database error: {e}")
+            logger.error(f"Database error while removing URL from tracked list: {e}")
             return False
-        
+        except Exception as e:
+            logger.error(f"Unexpected error while removing URL from tracked list: {e}")
+            return False
+
     def delete_price_alert(self, asin: str) -> bool:
         """Delete a price alert by its ID."""
         try:
@@ -392,7 +437,10 @@ class DatabaseService:
                 logger.info(f"Deleted price alert with ASIN: {asin}")
                 return True
         except sqlite3.Error as e:
-            logger.error(f"Database error: {e}")
+            logger.error(f"Database error while deleting price alert for product {asin}: {e}")
+            return False
+        except Exception as e:
+            logger.error(f"Unexpected error while deleting price alert for product {asin}: {e}")
             return False
         
     def set_url_to_active(self, asin:str) -> bool:
@@ -406,5 +454,8 @@ class DatabaseService:
                 logger.info(f"Updated URL for Product: {asin}")
                 return True
         except sqlite3.Error as e:
-            logger.error(f"Database error: {e}")
+            logger.error(f"Database error while updating URL to be actively tracked: {e}")
+            return False
+        except Exception as e:
+            logger.error(f"Unexpected error while updating URL to be actively tracked: {e}")
             return False

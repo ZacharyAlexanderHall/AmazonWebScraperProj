@@ -130,6 +130,7 @@ def parse_product_price(soup: BeautifulSoup) -> Optional[float]:
 def parse_images(soup: BeautifulSoup) -> list:
     """Parses product image URLs from soup object."""
     # see if this can be cleaned up. Currently loops through multiple nested spans to get all specific product images.
+    # Trying to avoid specificing looking for all "img" as that pulls irrelevant data, need to find consistent selector for only product info 
     images_to_save = []
     spans = soup.find_all('span')
     for span in spans:
@@ -170,7 +171,7 @@ def parse_product_features(soup: BeautifulSoup) -> dict:
     else:
         details = soup.find("div", id="prodDetails")
         if details:
-            for row in details.select("tr"): #select tablerows
+            for row in details.select("tr"): # Select tablerows
                 key = clean_text(row.find("th").text)
                 value = clean_text(row.find("td").text)
                 prod_features[key] = value

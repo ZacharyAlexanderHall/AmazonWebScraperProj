@@ -1,6 +1,17 @@
 # Python cache
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist-info/
+
+# PyInstaller
+build/
+dist/
 
 # VS Code
 .vscode/
@@ -10,13 +21,28 @@ __pycache__/
 
 # Virtual env
 .venv/
+venv/
+ENV/
+env/
 .env
 
-# Ignore actual Data
+# Database and data files
 data/*.json
 data/*.csv
 data/*.db
+*.db
 
-# GoogleApi Credentials
+# Google API Credentials (NEVER COMMIT THESE!)
 GmailCredentials.json
 token.pickle
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~

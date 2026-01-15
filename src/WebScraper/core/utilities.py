@@ -58,6 +58,7 @@ def is_amazon_url(url: str) -> bool:
     return True
 
 def is_email_address(email: str) -> bool:
+    """Rejects strings that don't follow standard Email formatting"""
     if not email or not isinstance(email, str):
         return False
 

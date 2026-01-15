@@ -29,7 +29,7 @@ def add_url(url:str):
         return
 
     # Ensure Product doesn't already exist in Db
-    existing_urls = db_service.get_all_tracked_urls()
+    existing_urls = db_service.get_all_saved_urls()
     for entry in existing_urls:
         if entry['asin'] == asin:
             print(f"⚠️ Product already being tracked!")
@@ -247,19 +247,23 @@ def show_usage():
 Amazon Price Tracker - Management Tool
 
 USAGE:
-    python manage_alerts.py <command> [arguments]
+    <command> [arguments]
+    Ex. run-schedule 48
+    Type the command followed by a space in between any following required parameters
 
 URL MANAGEMENT:
     add-url <url>                 Add a product URL to track
     show-urls                     Show all tracked URLs
-    remove-url <id>               Remove a URL by ID
+    remove-url <asin>             Remove a URL by ASIN
+
+RUN SCRAPES:
     run-scrape                    Scrape all tracked URLs now
-    run-schedule <hours>          Run Scraper ever X hours (continuous)
+    run-schedule <hours>          Run Scraper every X hours (continuous)
 
 ALERT MANAGEMENT:
     add-alert <asin> <price> <email>   Create price alert
-    list-alerts                        Show all active alerts
-    delete-alert <id>                  Delete alert by ID
+    show-alerts                        Show all active alerts
+    delete-alert <asin>                Delete alert by ASIN
 
 VIEWING DATA:
     show-products                 Show all tracked products
@@ -267,32 +271,33 @@ VIEWING DATA:
 
 EXAMPLES:
     # Add a product URL to track
-    python manage_alerts.py add-url "https://www.amazon.com/dp/B0CHRNR43T/"
+        add-url "https://www.amazon.com/dp/B0CHRNR43T/"
+        (Note URL should be in quotes)
     
     # Scrape all tracked URLs
-    python manage_alerts.py run-scrape
+        run-scrape
     
     # Create price alert
-    python manage_alerts.py add-alert B0CHRNR43T 25.00 you@example.com
+        add-alert B0CHRNR43T 25.00 you@example.com
     
     # List all alerts
-    python manage_alerts.py list-alerts
+        show-alerts
     
     # Delete an alert
-    python manage_alerts.py delete-alert 1
+        delete-alert B0CHRNR43T
 
 WORKFLOW:
-    1. Add URLs: python manage_alerts.py add-url <amazon_url>
-    2. Scrape: python manage_alerts.py run-scrape
-    3. Check products: python manage_alerts.py show-products
-    4. Set alerts: python manage_alerts.py add-alert <asin> <price> <email>
+    1. Add URLs: python run_tracker.py add-url <amazon_url>
+    2. Scrape: python run_tracker.py run-scrape
+    3. Check products: python run_tracker.py show-products
+    4. Set alerts: python run_tracker.py add-alert <asin> <price> <email>
     5. Run scraper periodically (manually or scheduled)
     """)
 
 def main():
     """Main CLI router."""
     if len(sys.argv) < 2:
-        show_usage()
+        interactive_mode()
         return
     
     command = sys.argv[1].lower()
@@ -378,6 +383,101 @@ def main():
     except Exception as e:
         print(f"\n❌ Error: {e}")
         logger.error(f"CLI error: {e}")
+
+def interactive_mode():
+    """Run in interactive mode - stay open and accept multiple commands."""
+    print("=" * 60)
+    print(" Amazon Price Tracker")
+    print("=" * 60)
+    print(" Type 'help' for commands, 'exit' to quit\n")
+    
+    while True:
+        try:
+            # Get user input
+            user_input = input("tracker> ").strip()
+            
+            if not user_input:
+                continue
+            
+            # Split into command and arguments
+            parts = user_input.split()
+            command = parts[0].lower()
+            
+            # Exit command
+            if command in ['exit', 'quit', 'q']:
+                print("\nGoodbye!")
+                break
+            
+            # Help command
+            if command == 'help':
+                show_usage()
+                continue
+            
+            # Simulate command-line arguments for existing functions
+            sys.argv = ['tracker'] + parts
+            
+            # Route to existing command handlers
+            if command == "add-url":
+                if len(parts) != 2:
+                    print("❌ Usage: add-url <amazon_url>")
+                    continue
+                add_url(parts[1])
+            
+            elif command == "show-urls":
+                show_urls()
+            
+            elif command == "remove-url":
+                if len(parts) != 2:
+                    print("❌ Usage: remove-url <asin>")
+                    continue
+                remove_url(parts[1])
+            
+            elif command == "run-scrape":
+                run_scrape()
+            
+            elif command == "run-schedule":
+                if len(parts) != 2:
+                    print("❌ Usage: run-schedule <hours>")
+                    continue
+                try:
+                    hours = int(parts[1])
+                    run_scheduler(hours)
+                except ValueError:
+                    print("❌ Hours must be a number")
+            
+            elif command == "add-alert":
+                if len(parts) != 4:
+                    print("❌ Usage: add-alert <asin> <price> <email>")
+                    continue
+                try:
+                    price = float(parts[2])
+                    add_alert(parts[1], price, parts[3])
+                except ValueError:
+                    print(f"❌ Price must be a number, got: '{parts[2]}'")
+            
+            elif command == "show-alerts":
+                show_alerts()
+            
+            elif command == "delete-alert":
+                if len(parts) != 2:
+                    print("❌ Usage: delete-alert <asin>")
+                    continue
+                delete_alert(parts[1])
+            
+            elif command == "show-products":
+                show_products()
+            
+            else:
+                print(f"❌ Unknown command: '{command}'")
+                print("Type 'help' for available commands\n")
+            
+            print()  # Blank line between commands
+            
+        except KeyboardInterrupt:
+            print("\n\nUse 'exit' to quit")
+        except Exception as e:
+            print(f"\n❌ Error: {e}")
+            logger.error(f"Interactive mode error: {e}")
 
 if __name__ == "__main__":
     main()

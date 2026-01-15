@@ -18,14 +18,24 @@ from WebScraper.core.utilities import logger
 # Scope only allowing user to send emails
 SCOPES = ["https://www.googleapis.com/auth/gmail.send"]
 
-# Creates path to token.pickle and credentials
-THIS_FILE = Path(__file__).resolve()
-PROJ_ROOT = THIS_FILE.parents[3] # Reachers Project Folder level
-TOKEN_PATH = os.path.join(PROJ_ROOT, "token.pickle")
-CREDS_PATH = os.path.join(PROJ_ROOT, "GmailCredentials.json")
+def get_credentials_directory():
+    """Get or create the credentials directory."""
+    # Check if we're in development
+    dev_root = Path(__file__).resolve().parents[3]
+    if os.path.exists(dev_root / "GmailCredentials.json"):
+        # Development mode - use project root
+        return dev_root
+    else:
+        # Production mode - use user's home directory
+        creds_dir = Path.home() / ".amazon_price_tracker"
+        creds_dir.mkdir(parents=True, exist_ok=True)
+        return creds_dir
+    
+CREDS_ROOT = get_credentials_directory()
+TOKEN_PATH = os.path.join(CREDS_ROOT, "token.pickle")
+CREDS_PATH = os.path.join(CREDS_ROOT, "GmailCredentials.json")
 
 class EmailService:
-
     def __init__(self):
         self.service = self._gmail_authenticate()
         
@@ -56,7 +66,7 @@ class EmailService:
             
         return build("gmail", "v1", credentials=creds, cache_discovery=False)
 
-    def _send_price_alert_email(self, target_email:str, product: Product, target_price: float, old_price: Optional[float]) -> bool:
+    def send_price_alert(self, target_email:str, product: Product, target_price: float, old_price: Optional[float]) -> bool:
         """
         Send price alert email when product drops below target price.
         
@@ -120,6 +130,7 @@ class EmailService:
                 <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
                     <h3 style="margin-top: 0;">{product.name}</h3>
                     <p><strong>ASIN:</strong> {product.asin}</p>
+                    <a href="{product.url}"> 🛒 View on Amazon</a>
                 </div>
                 
                 {savings_text}
@@ -148,7 +159,7 @@ class EmailService:
                 <h4>Product Images:</h4>
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
             """
-            for url in product.imageUrls[:3]:  # Max 3 images
+            for url in product.imageUrls[:5]:  # Max 3 images
                 html_body += f'<img src="{url}" style="max-width: 180px; border: 1px solid #ddd; border-radius: 5px;" />'
             html_body += "</div></div>"
 
@@ -165,6 +176,9 @@ class EmailService:
 
         return html_body
 
+# ============================================================================
+# Legacy Email Methods
+# ============================================================================
     def send_email(self, target:str, product: Product) -> None:
         """
         Send an email with product information to target email address. - (Legacy Method)

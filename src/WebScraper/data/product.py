@@ -25,18 +25,3 @@ class Product:
             self.asin = extract_asin_from_url(self.url)
 
         object.__setattr__(self, "created_at", datetime.now())
-
-    def clean_name(self):
-        """Cleans Name to Avoid Blank Names and Problematic Data"""
-        if self.name == "":
-            return "Missing Name"
-        return self.name.strip()
-
-    def clean_price(self, price_string):
-        """Cleans Sales Price to only display Number"""
-        price_string = price_string.strip()
-        price_string = price_string.replace("Sale price£", "")
-        price_string = price_string.replace("Sale priceFrom £", "")
-        if price_string == "":
-            return 0.0
-        return float(price_string)

@@ -47,8 +47,8 @@ def scrape_page(url:str, db_service = None, email_service = None) -> bool:
 
             if triggered_alerts:
                 for alert in triggered_alerts:
-                    #send Alert Email
-                    email_service.send_price_alert(alert.user_email, product, alert.target_price)
+                    # Send Alert Email
+                    email_service.send_price_alert(alert.user_email, product, alert.target_price, old_price=old_price)
                     logger.info(f"Price Alert Triggered for {product.name} at price {product.price} for {alert.user_email}")
 
         logger.info(f"Successfully Scraped Product: {product.name}")

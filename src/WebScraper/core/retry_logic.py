@@ -2,13 +2,10 @@ import requests
 import random
 import time
 
-from WebScraper.services.client_metadata import BrowserHeadersMiddleware, UserAgentMiddleware
+from WebScraper.services.client_metadata import BrowserHeadersMiddleware
 from WebScraper.core.utilities import logger
 
 browser_headers_middleware = BrowserHeadersMiddleware(num_headers=20)
-
-# Use as needed.
-#user_agent_middleware = UserAgentMiddleware(num_user_agents=20)
 
 # Triggers get requests with a specific number of retries.
 class RetryLogic:
@@ -77,7 +74,7 @@ class RetryLogic:
         """Creates growing delay in between attempts based off current attempt number"""
         # Exponetial backoff in attempts
         # Attempt 0: 1 sec, 1: 2 sec, 2: 4 sec, 3: 8 sec, 4: 16 sec
-        base_delay = 2 ^ attempt 
+        base_delay = 2 ** attempt 
 
         # Add randomized jitter 
         jitter = random.uniform(-.3, .7)
