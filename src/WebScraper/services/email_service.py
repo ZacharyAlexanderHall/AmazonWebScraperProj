@@ -43,10 +43,26 @@ CREDS_PATH = os.path.join(CREDS_ROOT, "GmailCredentials.json")
 
 class EmailService:
     def __init__(self):
-        self.service = self._gmail_authenticate()
+        self.service = None
+        self.authenticated = False
+
+        try:
+            self.service = self._gmail_authenticate()
+            self.authenticated = True
+            logger.info("Gmail API successfully authenticated")
+        except FileNotFoundError:
+            logger.warning("GmailCredentials.json not found. Email alerts will be disabled.")
+            logger.info("To enable email alerts, follow the Gmail API setup guide.")
+        except Exception as e:
+            logger.warning(f"Gmail authentication failed: {e}")
+            logger.info("Email alerts will be disabled. The app will continue without them.")
         
     def _gmail_authenticate(self):
         creds = None
+
+        # Allows Gmail authentication to not exist, but scraper still run
+        if not os.path(CREDS_PATH):
+            raise FileNotFoundError(f"GmailCredentials.json not found at: {CREDS_PATH}")
 
         # token.pickle stores user access / refresh tokens
         # Created automatically when the authorization flow completes the first time
@@ -85,6 +101,10 @@ class EmailService:
         Returns:
             bool: True if email sent successfully, False otherwise
         """
+        if not self.authenticated:
+            logger.info(f"Skipping email alert for {product.name} - Gmail not configured")
+            return False
+
         message = EmailMessage()
         message["To"] = target_email
         message["From"] = "me" # Stand Gmail API Practice

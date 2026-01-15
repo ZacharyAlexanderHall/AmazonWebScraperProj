@@ -17,14 +17,14 @@ def add_url(url:str):
     """Add a new URL to be tracked in the database."""
     # Validate URL
     if not is_amazon_url(url):
-        print(f"❌ INVALID URL: {url}")
+        print(f"[ERROR] INVALID URL: {url}")
         print("Please provide a valid Amazon product URL...")
         return
     
     # Extract ASIN
     asin = extract_asin_from_url(url)
     if not asin:
-        print(f"❌ INVALID URL: Could not extract ASIN from URL: {url}")
+        print(f"[ERROR] INVALID URL: Could not extract ASIN from URL: {url}")
         print("Please provide a valid Amazon product URL...")
         return
 
@@ -32,13 +32,13 @@ def add_url(url:str):
     existing_urls = db_service.get_all_saved_urls()
     for entry in existing_urls:
         if entry['asin'] == asin:
-            print(f"⚠️ Product already being tracked!")
+            print(f"[WARNING] Product already being tracked!")
             print(f"ASIN: {asin}")
             print(f"Existing Url:{url}")
             
             print("Setting Existing URL to active...")
             db_service.set_url_to_active(asin)
-            print(f"✅ URL for Product: '{asin}' set to actively track!")
+            print(f"[OK] URL for Product: '{asin}' set to actively track!")
             print(f"   ASIN: {asin}")
             print(f"   URL: {url}")
             return
@@ -46,7 +46,7 @@ def add_url(url:str):
     # Add URL to Database
     standardized_url = standardize_product_url(asin) # takes asin to create standardized url for DB consistency
     db_service.add_url(standardized_url, asin)
-    print(f"✅ URL added to tracking list!")
+    print(f"[OK] URL added to tracking list!")
     print(f"   ASIN: {asin}")
     print(f"   URL: {url}")
     print(f"\n   Run 'run-scrape' to scrape it now")
@@ -58,7 +58,7 @@ def show_urls():
         print("No URLs are currently being tracked.")
         return
 
-    print(f"\n🔗 Tracked URLs ({len(tracked_urls)}):\n")
+    print(f"\nTracked URLs ({len(tracked_urls)}):\n")
     print("-" * 100)
     
     for url_data in tracked_urls:
@@ -101,16 +101,16 @@ def run_scrape():
     for url_data in url_data_list:
         try:
             url = url_data['url']
-            print(f"   🔍 Scraping URL: {url}")
+            print(f"   >> Scraping URL: {url}")
 
             if scrape_page(url, db_service=db_service, email_service=email_service):
-                print(f"   ✅ Scrape successful!\n")
+                print(f"   [OK] Scrape successful!\n")
                 success_count += 1
             else:
                 print(f"Scrape unsccessful for Url: {url}")
                 fail_count += 1
         except Exception as e:
-            print(f"   ❌ Scrape failed: {e}\n")
+            print(f"   [ERROR] Scrape failed: {e}\n")
             logger.error(f"Error scraping URL {url}: {e}")
             fail_count += 1
         finally:
@@ -125,7 +125,7 @@ def run_scrape():
 
 def run_scheduler(interval_hours: int = 48):
     """Run Scraper on a scheduled interval, defauklts to every 48 hours."""
-    print(f"🕐 Starting scheduler: scraping every {interval_hours} hours")
+    print(f"Starting scheduler: scraping every {interval_hours} hours")
     print("Press Ctrl+C to stop\n")
 
     try:
@@ -161,7 +161,7 @@ def add_alert(asin: str, target_price: float, target_email: str):
     product = db_service.get_product_by_asin(asin)
     
     if not product:
-        print(f"❌ Product with ASIN {asin} not found in database.")
+        print(f"[ERROR] Product with ASIN {asin} not found in database.")
         print("   Tip: Scrape the product first with: python Amazon_Web_Scraper.py run-scrape")
         return
     
@@ -172,14 +172,14 @@ def add_alert(asin: str, target_price: float, target_email: str):
     # Create alert
     db_service.set_price_alert(asin, target_price, target_email)
     
-    print(f"✅ Alert created successfully!")
+    print(f"[OK] Alert created successfully!")
     print(f"   Product: {product.name[:60]}")
     print(f"   Current price: ${product.price:.2f}")
     print(f"   Alert price: ${target_price:.2f}")
     print(f"   Email: {target_email}")
     
     if product.price <= target_price:
-        print(f"   ⚠️  Current price already meets alert threshold!")
+        print(f"   [WARNING] Current price already meets alert threshold!")
 
 def show_alerts():
     """List all active price alerts."""
@@ -190,11 +190,11 @@ def show_alerts():
         print("Tip: Add an alert with: python manage_alerts.py add-alert <asin> <price> <email>")
         return
     
-    print(f"\n📊 Active Price Alerts ({len(alerts)}):\n")
+    print(f"\nActive Price Alerts ({len(alerts)}):\n")
     print("-" * 100)
     
     for alert in alerts:
-        status = "🟢" if alert["current_price"] <= alert["target_price"] else "🔴"
+        status = "[+]" if alert["current_price"] <= alert["target_price"] else "[-]"
         
         print(f"{status} Alert ID: {alert['id']}")
         print(f"   Product: {alert['product_name'][:60]}")
@@ -208,9 +208,9 @@ def delete_alert(asin:str):
     success = db_service.delete_price_alert(asin)
 
     if success:
-        print(f"✅ Alert deleted for Product: '{asin}'")
+        print(f"[OK] Alert deleted for Product: '{asin}'")
     else:
-        print(f"❌ Alert for Product '{asin}' not found")
+        print(f"[ERROR] Alert for Product '{asin}' not found")
 
 # ============================================================================
 # VIEWING DATA
@@ -224,11 +224,11 @@ def show_products():
         print("Tip: Run scraper with: python manage_alerts.py run-scrape")
         return
     
-    print(f"\n📦 Tracked Products ({len(products)}):\n")
+    print(f"\nTracked Products ({len(products)}):\n")
     print("-" * 100)
     
     for product in products:
-        print(f"• {product.name[:70]}")
+        print(f">> {product.name[:70]}")
         print(f"  ASIN: {product.asin}")
         print(f"  Price: ${product.price:.2f}")
         print(f"  Last updated: {product.updated_at or 'N/A'}")
@@ -306,7 +306,7 @@ def main():
     try:
         if command == "add-url":
             if len(sys.argv) != 3:
-                print("❌ Usage: add-url <amazon_url>")
+                print("[ERROR] Usage: add-url <amazon_url>")
                 return
             add_url(sys.argv[2])
         
@@ -315,7 +315,7 @@ def main():
         
         elif command == "remove-url":
             if len(sys.argv) != 3:
-                print("❌ Usage: remove-url <asin>")
+                print("[ERROR] Usage: remove-url <asin>")
                 print("Please enter Product ASIN (Use command 'show-products' to view all saved products)")
                 print("the URL associated with the provided ASIN will be deleted")
                 return
@@ -323,34 +323,34 @@ def main():
                 asin = sys.argv[2]
                 remove_url(asin)
             except ValueError:
-                print("❌ ID must be a number")
+                print("[ERROR] ID must be a number")
         
         elif command == "run-scrape":
             run_scrape()
 
         elif command == "run-schedule":
             if len(sys.argv) != 3:
-                print("❌ Usage: schedule <hours>")
+                print("[ERROR] Usage: schedule <hours>")
                 print("   Example: schedule 48")
                 return
             try:
                 hours = int(sys.argv[2])
                 if hours < 1:
-                    print("❌ Hours must be at least 1")
+                    print("[ERROR] Hours must be at least 1")
                     return
                 run_scheduler(hours)
             except ValueError:
-                print("❌ Hours must be a number")
+                print("[ERROR] Hours must be a number")
         
         elif command == "add-alert":
             if len(sys.argv) != 5:
-                print("❌ Usage: add-alert <asin> <price> <email>")
+                print("[ERROR] Usage: add-alert <asin> <price> <email>")
                 return
             asin = sys.argv[2]
             try:
                 price = float(sys.argv[3])
             except ValueError:
-                print(f"❌ Price must be a number, got: '{sys.argv[3]}'")
+                print(f"[ERROR] Price must be a number, got: '{sys.argv[3]}'")
                 return
             email = sys.argv[4]
             add_alert(asin, price, email)
@@ -360,13 +360,13 @@ def main():
         
         elif command == "delete-alert":
             if len(sys.argv) != 3:
-                print("❌ Usage: delete-alert <asin>")
+                print("[ERROR] Usage: delete-alert <asin>")
                 return
             try:
                 asin = sys.argv[2]
                 delete_alert(asin)
             except ValueError:
-                print(f"❌ Unable to delete Alert for Product: {asin}")
+                print(f"[ERROR] Unable to delete Alert for Product: {asin}")
         
         elif command == "show-products":
             show_products()
@@ -375,14 +375,14 @@ def main():
             show_usage()
         
         else:
-            print(f"❌ Unknown command: '{command}'")
+            print(f"[ERROR] Unknown command: '{command}'")
             print()
             show_usage()
     
     except KeyboardInterrupt:
         print("\n\nOperation cancelled by user.")
     except Exception as e:
-        print(f"\n❌ Error: {e}")
+        print(f"\n[ERROR] Error: {e}")
         logger.error(f"CLI error: {e}")
 
 def interactive_mode():
@@ -420,7 +420,7 @@ def interactive_mode():
             # Route to existing command handlers
             if command == "add-url":
                 if len(parts) != 2:
-                    print("❌ Usage: add-url <amazon_url>")
+                    print("[ERROR] Usage: add-url <amazon_url>")
                     continue
                 add_url(parts[1])
             
@@ -429,7 +429,7 @@ def interactive_mode():
             
             elif command == "remove-url":
                 if len(parts) != 2:
-                    print("❌ Usage: remove-url <asin>")
+                    print("[ERROR] Usage: remove-url <asin>")
                     continue
                 remove_url(parts[1])
             
@@ -438,30 +438,30 @@ def interactive_mode():
             
             elif command == "run-schedule":
                 if len(parts) != 2:
-                    print("❌ Usage: run-schedule <hours>")
+                    print("[ERROR] Usage: run-schedule <hours>")
                     continue
                 try:
                     hours = int(parts[1])
                     run_scheduler(hours)
                 except ValueError:
-                    print("❌ Hours must be a number")
+                    print("[ERROR] Hours must be a number")
             
             elif command == "add-alert":
                 if len(parts) != 4:
-                    print("❌ Usage: add-alert <asin> <price> <email>")
+                    print("[ERROR] Usage: add-alert <asin> <price> <email>")
                     continue
                 try:
                     price = float(parts[2])
                     add_alert(parts[1], price, parts[3])
                 except ValueError:
-                    print(f"❌ Price must be a number, got: '{parts[2]}'")
+                    print(f"[ERROR] Price must be a number, got: '{parts[2]}'")
             
             elif command == "show-alerts":
                 show_alerts()
             
             elif command == "delete-alert":
                 if len(parts) != 2:
-                    print("❌ Usage: delete-alert <asin>")
+                    print("[ERROR] Usage: delete-alert <asin>")
                     continue
                 delete_alert(parts[1])
             
@@ -469,7 +469,7 @@ def interactive_mode():
                 show_products()
             
             else:
-                print(f"❌ Unknown command: '{command}'")
+                print(f"[ERROR] Unknown command: '{command}'")
                 print("Type 'help' for available commands\n")
             
             print()  # Blank line between commands
@@ -477,7 +477,7 @@ def interactive_mode():
         except KeyboardInterrupt:
             print("\n\nUse 'exit' to quit")
         except Exception as e:
-            print(f"\n❌ Error: {e}")
+            print(f"\n[ERROR] Error: {e}")
             logger.error(f"Interactive mode error: {e}")
 
 if __name__ == "__main__":
