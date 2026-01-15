@@ -10,7 +10,7 @@ def load_env_file():
     """ Load .env file from proj root or user config directioery"""
     possible_paths = [
         Path.cwd() / ".env", # Current Directory (if placed next to .exe)
-        Path(__file__).resolve().parent[3] / ".env", # Dev Mode
+        Path(__file__).resolve().parents[3] / ".env", # Dev Mode
         Path.home() / "AmazonPriceTracker" / ".env", # Prod Mode
     ]
 
