@@ -15,7 +15,7 @@ def get_data_directory():
         data_dir = Path(__file__).resolve().parents[3] / "data"
     else:
         # Production mode - use user's home directory
-        data_dir = Path.home() / ".amazon_price_tracker" / "data"
+        data_dir = Path.home() / "AmazonPriceTracker" / "data"
         
     # create Directory if it doesn't exist
     data_dir.mkdir(parents=True, exist_ok=True)

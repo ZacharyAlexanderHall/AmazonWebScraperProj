@@ -1,11 +1,23 @@
 import random
 import requests
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 from WebScraper.core.utilities import logger
 
 # Load environment variables from .env
-load_dotenv()
+def load_env_file():
+    """ Load .env file from proj root or user config directioery"""
+    possible_paths = [
+        Path.cwd() / ".env", # Current Directory (if placed next to .exe)
+        Path(__file__).resolve().parent[3] / ".env", # Dev Mode
+        Path.home() / "AmazonPriceTracker" / ".env", # Prod Mode
+    ]
+
+    for env_path in possible_paths:
+        if env_path.exists():
+            load_dotenv(env_path)
+            return
 
 # ScrapeOps API Key specific to your account.
 SCRAPEOPS_API_KEY = os.getenv("SCRAPEOPS_API_KEY")

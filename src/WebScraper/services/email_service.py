@@ -20,16 +20,22 @@ SCOPES = ["https://www.googleapis.com/auth/gmail.send"]
 
 def get_credentials_directory():
     """Get or create the credentials directory."""
-    # Check if we're in development
-    dev_root = Path(__file__).resolve().parents[3]
-    if os.path.exists(dev_root / "GmailCredentials.json"):
-        # Development mode - use project root
-        return dev_root
-    else:
-        # Production mode - use user's home directory
-        creds_dir = Path.home() / ".amazon_price_tracker"
-        creds_dir.mkdir(parents=True, exist_ok=True)
-        return creds_dir
+    # Check multiple possible locations
+    possible_locations = [
+        Path.cwd(),  # Current directory (next to .exe)
+        Path(__file__).resolve().parents[3],  # Development mode
+        Path.home() / "AmazonPriceTracker",  # Production mode
+    ]
+        
+    # Return first location that has GmailCredentials.json
+    for location in possible_locations:
+        if (location / "GmailCredentials.json").exists():
+            return location
+        
+    # If not found anywhere, use production folder as default
+    creds_dir = Path.home() / "AmazonPriceTracker"
+    creds_dir.mkdir(parents=True, exist_ok=True)
+    return creds_dir
     
 CREDS_ROOT = get_credentials_directory()
 TOKEN_PATH = os.path.join(CREDS_ROOT, "token.pickle")
